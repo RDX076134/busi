@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Business Card Extractor</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    .container { max-width: 600px; margin: auto; }
+    button { margin: 5px; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Business Card Extractor</h1>
+    <input type="file" id="imageInput" accept="image/png, image/jpeg"><br><br>
+    <button onclick="uploadImage()">Extract Info</button>
+    <h3>Extracted Information:</h3>
+    <pre id="result"></pre>
+    <button onclick="downloadVCF()">Download VCF</button>
+    <button onclick="shareWhatsApp()">Send on WhatsApp</button>
+  </div>
+
+  <script>
+    let extractedData = null;
+    const BACKEND_URL = 'https://YOUR_RENDER_BACKEND_URL_HERE/extract';
+
+    async function uploadImage() {
+      const fileInput = document.getElementById('imageInput');
+      if (!fileInput.files.length) return alert('Please upload an image.');
+
+      const formData = new FormData();
+      formData.append('image', fileInput.files[0]);
+
+      const res = await fetch(BACKEND_URL, { method: 'POST', body: formData });
+      const data = await res.json();
+      extractedData = data;
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    }
+
+    function downloadVCF() {
+      if (!extractedData) return alert('No data yet.');
+      const vcf = `BEGIN:VCARD
+VERSION:3.0
+FN:${extractedData.person_name}
+ORG:${extractedData.business_name}
+TITLE:${extractedData.position}
+TEL:${extractedData.phone}
+EMAIL:${extractedData.email}
+ADR:${extractedData.address}
+END:VCARD`;
+      const blob = new Blob([vcf], { type: 'text/vcard' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${extractedData.person_name}.vcf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function shareWhatsApp() {
+      if (!extractedData) return alert('No data yet.');
+      const message = `Name: ${extractedData.person_name}\nCompany: ${extractedData.business_name}\nPosition: ${extractedData.position}\nPhone: ${extractedData.phone}\nEmail: ${extractedData.email}\nAddress: ${extractedData.address}`;
+      const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
