@@ -4,6 +4,10 @@ services:
     env: python
     plan: free
     buildCommand: |
-      cd backend && pip install -r requirements.txt && python -m spacy download en_core_web_sm
+      cd backend
+      pip install -r requirements.txt
+      python -m spacy download en_core_web_sm
     startCommand: |
-      cd backend && gunicorn app:app
+      cd backend
+      gunicorn app:app
+    region: oregon
